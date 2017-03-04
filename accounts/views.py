@@ -1,24 +1,22 @@
 from django.contrib.auth.models import User
 
-from rest_framework import generics
-from rest_framework import status
-from rest_framework import viewsets
+from rest_framework import status, viewsets
+from rest_framework.authtoken.models import Token
+from rest_framework.authentication import TokenAuthentication
+from rest_framework.decorators import detail_route
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
 
-from accounts import permissions
-from accounts.serializers import RegisterSerializer
+from accounts import serializers
 
 
-class RegisterViewSet(generics.CreateAPIView):
+class AccountViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
-    serializer_class = RegisterSerializer
-    permission_classes = (AllowAny,)
+    serializer_class = serializers.AccountSerializer
 
-    # Redefine post so we do not return the data when a user is created
-    def post(self, request, *args, **kwargs):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+    @detail_route(methods=['get'], authentication_classes=[TokenAuthentication],
+                  permission_classes=[IsAuthenticated])
+    def info(self, request, pk=None):
+        user = Token.objects.get(key=pk).user
+        serializer = self.serializer_class(user)
+        return Response(serializer.data)

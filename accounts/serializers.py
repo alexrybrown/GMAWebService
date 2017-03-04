@@ -1,20 +1,20 @@
 from django.contrib.auth.models import User
 
 from rest_framework import serializers
+from rest_framework.authtoken.models import Token
 
 
-class RegisterSerializer(serializers.ModelSerializer):
+class AccountSerializer(serializers.ModelSerializer):
+    password = serializers.CharField(allow_blank=False, style={'input_type': 'password'})
     confirm_password = serializers.CharField(allow_blank=False,
                                              style={'input_type': 'password'},
                                              write_only=True)
-    password = serializers.CharField(allow_blank=False, style={'input_type': 'password'})
 
     class Meta:
         model = User
-        # fields = '__all__'
-        fields = ('first_name', 'last_name', 'email', 'username', 'password', 'confirm_password',)
+        fields = '__all__'
         write_only_fields = ('password', 'confirm_password',)
-        read_only_fields = ('is_staff', 'is_superuser', 'is_active', 'date_joined',)
+        read_only_fields = ('is_staff', 'is_superuser', 'is_active', 'date_joined', 'user_permissions', 'last_login', 'groups')
 
     def validate(self, attrs):
         if attrs['password'] != attrs.pop('confirm_password'):
@@ -32,4 +32,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         )
         user.set_password(validated_data['password'])
         user.save()
+        # After saving the user, create a token for that user.
+        Token.objects.create(user=user)
         return user

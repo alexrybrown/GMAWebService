@@ -1,4 +1,5 @@
 from rest_framework import permissions
+from rest_framework.authtoken.models import Token
 
 
 class IsOwnerOrReadOnly(permissions.BasePermission):
@@ -13,7 +14,8 @@ class IsOwnerOrReadOnly(permissions.BasePermission):
             return True
 
         # Write permissions are only allowed to the owner of the snippet.
-        return obj.owner == request.user
+        # We check this by using a token provided to us
+        return Token.objects.get(user=obj.owner) == request.auth
 
 
 class IsStaffOrTargetUser(permissions.BasePermission):
@@ -23,4 +25,4 @@ class IsStaffOrTargetUser(permissions.BasePermission):
 
     def has_object_permission(self, request, view, obj):
         # allow logged in user to view own details, allows staff to view all records
-        return request.user.is_staff or obj == request.user
+        return request.user.is_staff and Token.objects.get(user=obj) == request.auth
