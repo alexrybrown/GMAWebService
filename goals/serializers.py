@@ -14,17 +14,3 @@ class GoalSerializer(serializers.ModelSerializer):
         token = Token.objects.get(pk=self.context.get("token_id"))
         attrs['user'] = token.user
         return attrs
-
-    # def create(self, validated_data):
-    #     goal = Goal.objects.create(
-    #         user=validated_data.get('user'),
-    #         parent_goal=validated_data.get('parent_goal'),
-    #         title=validated_data.get('title'),
-    #         description=validated_data.get('description'),
-    #         comment=validated_data.get('comment'),
-    #         expected_completion=validated_data.get('expected_completion'),
-    #         finished_at=validated_data.get('finished_at'),
-    #         updated_by=validated_data.get('user'),
-    #     )
-    #     goal.save()
-    #     return goal

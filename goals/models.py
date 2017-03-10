@@ -6,7 +6,7 @@ from utils.models import BaseModel
 
 class Goal(BaseModel):
     user = models.ForeignKey(User)
-    parent_goal = models.ForeignKey('goals.Goal', null=True)
+    future_goal = models.ForeignKey('goals.Goal', null=True)
     title = models.TextField()
     description = models.TextField(null=True, blank=True)
     comment = models.TextField(null=True, blank=True)
