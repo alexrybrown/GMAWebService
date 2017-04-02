@@ -1,5 +1,4 @@
 from rest_framework import serializers
-from rest_framework.authtoken.models import Token
 
 from goals.models import Goal
 
@@ -10,7 +9,6 @@ class GoalSerializer(serializers.ModelSerializer):
         fields = '__all__'
         read_only_fields = ('user', 'updated_by')
 
-    def validate(self, attrs):
-        token = Token.objects.get(pk=self.context.get("token_id"))
-        attrs['user'] = token.user
-        return attrs
+    def create(self, validated_data):
+        return Goal.objects.create(user=self.context['request'].user, updated_by=self.context['request'].user,
+                                   **validated_data)
