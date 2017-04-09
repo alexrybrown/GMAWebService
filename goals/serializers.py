@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from django.utils import timezone
 from rest_framework import serializers
 
 from goals.models import Goal
@@ -19,7 +18,7 @@ class GoalSerializer(serializers.ModelSerializer):
         Goal.objects.update(**validated_data)
         instance = Goal.objects.get(pk=instance.pk)
         instance.updated_by = self.context['request'].user
-        instance.last_modified = datetime.now()
+        instance.last_modified = timezone.now()
         instance.save()
         return instance
 
@@ -31,5 +30,5 @@ class GoalCompleteSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         instance = super(GoalCompleteSerializer, self).update(instance, validated_data)
-        instance.completed_at = datetime.now()
+        instance.completed_at = timezone.now()
         return instance

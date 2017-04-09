@@ -1,5 +1,4 @@
-from datetime import datetime
-
+from django.utils import timezone
 from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
@@ -25,7 +24,8 @@ class GoalViewSet(viewsets.ModelViewSet):
 
     @list_route(['get'], url_path='future-goals')
     def future_goals(self, request):
-        goals = request.user.goal_set.filter(future_goal=None, archived=False).order_by('expected_completion')
+        goals = request.user.goal_set.filter(
+            future_goal=None, archived=False, finished_at__isnull=True).order_by('expected_completion')
         serializer = GoalSerializer(goals, many=True)
         return Response(serializer.data)
 
@@ -40,7 +40,8 @@ class GoalViewSet(viewsets.ModelViewSet):
             else:
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         else:
-            sub_goals = goal.goal_set.filter(archived=False)
+            sub_goals = goal.goal_set.filter(
+                archived=False, finished_at__isnull=True).order_by('expected_completion')
             serializer = GoalSerializer(sub_goals, many=True)
             return Response(serializer.data)
 
@@ -48,23 +49,27 @@ class GoalViewSet(viewsets.ModelViewSet):
     def archive(self, request, pk=None):
         goal = self.get_object()
         if goal:
-            self._archive_helper(goal)
+            self._archive_helper(goal, request)
             return Response(status=status.HTTP_200_OK)
         else:
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    def _archive_helper(self, goal):
+    def _archive_helper(self, goal, request):
         goal.archived = True
+        goal.updated_by = request.user
+        goal.last_modified = timezone.now()
         goal.save()
         if goal.goal_set.all():
             for sub_goal in goal.goal_set.all():
-                self._archive_helper(sub_goal)
+                self._archive_helper(sub_goal, request)
 
     @detail_route(['post'], url_path='complete')
     def complete(self, request, pk=None):
         goal = self.get_object()
         if goal:
-            goal.completed_at = datetime.now()
+            goal.finished_at = timezone.now()
+            goal.updated_by = request.user
+            goal.last_modified = timezone.now()
             goal.save()
             return Response(status=status.HTTP_200_OK)
         else:
