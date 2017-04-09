@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
 
+from rest_framework import status
 from rest_framework import viewsets
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.decorators import list_route
@@ -17,4 +18,4 @@ class AccountViewSet(viewsets.ModelViewSet):
                 permission_classes=[IsAuthenticated], url_path="user-info")
     def user_info(self, request):
         serializer = self.serializer_class(request.user)
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_200_OK)
