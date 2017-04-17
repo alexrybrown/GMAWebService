@@ -24,8 +24,29 @@ class GoalViewSet(viewsets.ModelViewSet):
 
     @list_route(['get'], url_path='future-goals')
     def future_goals(self, request):
+        date = timezone.now()
         goals = request.user.goal_set.filter(
-            future_goal=None, archived=False, finished_at__isnull=True).order_by('expected_completion')
+            future_goal=None, archived=False, finished_at__isnull=True,
+            expected_completion__gte=date).order_by('expected_completion')
+        serializer = GoalSerializer(goals, many=True)
+        return Response(serializer.data)
+
+    @list_route(['get'], url_path='overdue-goals')
+    def overdue_goals(self, request):
+        date = timezone.now()
+        goals = request.user.goal_set.filter(
+            goal__isnull=True, archived=False, finished_at__isnull=True,
+            expected_completion__lte=date).order_by('expected_completion')
+        serializer = GoalSerializer(goals, many=True)
+        return Response(serializer.data)
+
+    @list_route(['get'], url_path='upcoming-goals')
+    def upcoming_goals(self, request):
+        date = timezone.now()
+        next_week = date + timezone.timedelta(days=7)
+        goals = request.user.goal_set.filter(
+            goal__isnull=True, archived=False, finished_at__isnull=True,
+            expected_completion__gte=date, expected_completion__lte=next_week).order_by('expected_completion')
         serializer = GoalSerializer(goals, many=True)
         return Response(serializer.data)
 
