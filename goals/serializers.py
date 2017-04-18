@@ -15,8 +15,7 @@ class GoalSerializer(serializers.ModelSerializer):
                                    **validated_data)
 
     def update(self, instance, validated_data):
-        Goal.objects.update(**validated_data)
-        instance = Goal.objects.get(pk=instance.pk)
+        instance = super(GoalSerializer, self).update(instance, validated_data)
         instance.updated_by = self.context['request'].user
         instance.last_modified = timezone.now()
         instance.save()
